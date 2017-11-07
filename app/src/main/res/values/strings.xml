@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Wifi Analyzer</string>
+    <string name="action_settings">About</string>
+    <string name="dialog_text">
+        WiFi Analyzer
+        \nVersion 1.0
+        \nRelease: 25-03-2017
+        \nAll rights reserved.
+        \n\nContact:
+        \nMenaka Ravi
+        \nmenaka.ravi23@gmail.com
+    </string>
+    <string name="title_activity_monitor">Monitor Wifi Signal</string>
+</resources>
