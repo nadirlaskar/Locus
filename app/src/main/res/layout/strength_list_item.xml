@@ -18,12 +18,11 @@
         android:id="@+id/strength"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        tools:text="-30 dBm"
-        android:textSize="20sp"
-        android:textColor="@android:color/secondary_text_light"
-        android:layout_weight="2"
         android:layout_gravity="center_vertical"
-        android:gravity="center"/>
+        android:layout_weight="2"
+        android:gravity="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        tools:text="-30 dBm" />
 
     <TextView
         android:id="@+id/time"

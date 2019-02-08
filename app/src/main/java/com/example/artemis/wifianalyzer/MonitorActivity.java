@@ -1,7 +1,10 @@
 package com.example.artemis.wifianalyzer;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.net.wifi.WifiInfo;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -10,25 +13,38 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.text.DateFormat;
+
 import android.view.View;
 import android.widget.ListView;
-import android.widget.Toast;
-import java.text.SimpleDateFormat;
+
 import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class MonitorActivity extends AppCompatActivity {
 
-    Timer T;
+    Timer T,T1;
+    boolean newDataAvailable = true;
+    WifiManager  wifiManager = null;
+    public class SignalComparator implements Comparator<ScanResult>
+
+    {
+        public int compare(ScanResult left, ScanResult right) {
+            return right.level - left.level;
+        }
+    }
+
+    BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context c, Intent intent) {
+                newDataAvailable = true;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,18 +52,31 @@ public class MonitorActivity extends AppCompatActivity {
         setContentView(R.layout.activity_monitor);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
+        wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "View your Wifi signal strength logs", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+
+                Snackbar.make(view, ("Automatic scan is "+(wifiManager.isScanAlwaysAvailable()?"enabled":"disabled")), Snackbar.LENGTH_LONG)
+                        .setAction("Scan Now", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                wifiManager.startScan();
+                            }
+                        }).show();
             }
         });
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         addSignalItems();
+
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
+        if(!wifiManager.isWifiEnabled()){
+            wifiManager.setWifiEnabled(true);
+        }
     }
 
     private void addSignalItems() {
@@ -77,9 +106,10 @@ public class MonitorActivity extends AppCompatActivity {
         catch(Exception e){
         }
 
-        final long msec = 3000;
+        final long msec = 30*1000;
 
         T = new Timer();
+        T1 = new Timer();
         T.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -88,55 +118,62 @@ public class MonitorActivity extends AppCompatActivity {
                     @Override
                     public void run()
                     {
-                        int img=0, dbm, level;
-
-                        WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-                        dbm = wifiInfo.getRssi();
-                        level = WifiManager.calculateSignalLevel(dbm, 5);
-                        switch (level) {
-                            case 0:
-                                img = R.drawable.icon_wifi0;
-                                break;
-                            case 1:
-                                img = R.drawable.icon_wifi1;
-                                break;
-                            case 2:
-                                img = R.drawable.icon_wifi2;
-                                break;
-                            case 3:
-                                img = R.drawable.icon_wifi3;
-                                break;
-                            case 4:
-                                img = R.drawable.icon_wifi;
-                                break;
-                        }
-
-                        Calendar cal = Calendar.getInstance();
-                        Date currentLocalTime = cal.getTime();
-                        DateFormat date = new SimpleDateFormat("HH:mm:ss");
-
-                        String time = date.format(currentLocalTime);
-
-                        signals.add(new Signal(img,dbm+" dBm",time));
-                        signalListView.setAdapter(new SignalAdapter(MonitorActivity.this, signals));
-
-                        String string = dbm+" dBm "+time;
-
-                        try {
-
-                            FileOutputStream outputStream = openFileOutput(filename, MODE_APPEND);
-                            outputStream.write((string+"\n").getBytes());
-                            outputStream.close();
-
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-
+                        wifiManager.startScan(); //enable for force scan
+                        newDataAvailable = false;
                     }
                 });
             }
         }, 0, msec);
+
+        final long readData = 1000;
+        T.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                runOnUiThread(new Runnable()
+                {
+                    @Override
+                    public void run()
+                    {
+
+                        if(!newDataAvailable) return;
+                        newDataAvailable = false;
+
+                        int img=0, dbm, level;
+                        final List<ScanResult> scanResults = wifiManager.getScanResults();
+                        Collections.sort(scanResults, new SignalComparator());
+
+                        signals.clear();
+                        for (ScanResult sr:scanResults) {
+                            dbm = sr.level;
+                            String SSID = sr.SSID +" - "+ sr.BSSID.substring(12);
+                            if((SSID.startsWith("S1_GUEST")||true)){
+                                level = WifiManager.calculateSignalLevel(dbm, 5);
+                                switch (level) {
+                                    case 0:
+                                        img = R.drawable.icon_wifi0;
+                                        break;
+                                    case 1:
+                                        img = R.drawable.icon_wifi1;
+                                        break;
+                                    case 2:
+                                        img = R.drawable.icon_wifi2;
+                                        break;
+                                    case 3:
+                                        img = R.drawable.icon_wifi3;
+                                        break;
+                                    case 4:
+                                        img = R.drawable.icon_wifi;
+                                        break;
+                                }
+                                signals.add(new Signal(img, SSID,dbm+" dBm"));
+                            }
+                        }
+
+                        signalListView.setAdapter(new SignalAdapter(MonitorActivity.this, signals));
+                    }
+                });
+            }
+        }, 0, readData);
 
     }
 }

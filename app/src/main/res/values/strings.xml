@@ -11,4 +11,5 @@
         \nmenaka.ravi23@gmail.com
     </string>
     <string name="title_activity_monitor">Monitor Wifi Signal</string>
+    <string name="title_activity_fingerprinting">Fingerprinting</string>
 </resources>

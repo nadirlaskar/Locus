@@ -24,6 +24,8 @@ public class Signal {
         return dbm;
     }
 
+    public int getDbmInt(){ return  Integer.parseInt(dbm); }
+
     public String getTime() {
         return time;
     }
