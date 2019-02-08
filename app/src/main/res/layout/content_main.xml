@@ -9,81 +9,89 @@
     tools:context="com.example.artemis.wifianalyzer.MainActivity"
     tools:showIn="@layout/activity_main">
 
-<LinearLayout
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginBottom="8dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="48dp"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:background="@color/colorSubhead">
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:background="@color/colorSubhead"
+            android:paddingLeft="16dp"
+            android:paddingRight="16dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:text="Live Tracking"
+                android:textColor="#ffffff"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <Switch
+                android:id="@+id/switch1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:textOff="OFF"
+                android:textOn="ON" />
+        </RelativeLayout>
 
         <TextView
-            android:layout_width="wrap_content"
+            android:id="@+id/wifiText"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Wi-Fi"
-            android:textSize="16sp"
-            android:textColor="#ffffff"
-            android:textStyle="bold"
-            android:layout_alignParentLeft="true"
-            android:layout_centerVertical="true"/>
-        <Switch
-            android:id="@+id/switch1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:layout_centerVertical="true"
-            android:textOn="ON"
-            android:textOff="OFF"/>
-    </RelativeLayout>
+            android:gravity="center_horizontal"
+            android:textSize="48sp"
+            tools:text="Locus" />
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Connected network strength"
-        android:paddingTop="16dp"
-        android:paddingBottom="16dp"
-        android:gravity="center_horizontal"/>
-    <TextView
-        android:id="@+id/wifiText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        tools:text="-30"
-        android:textSize="48sp"
-        android:gravity="center_horizontal"/>
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="dBm"
-        android:textSize="24sp"
-        android:gravity="center_horizontal"/>
-    <Button
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:text="Properties"
-        android:layout_marginTop="36dp"
-        android:layout_gravity="center_horizontal"
-        style="@style/ButtonText"
-        android:onClick="showWifiDetails"/>
-    <Button
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:text="Monitor Signal"
-        android:layout_marginTop="16dp"
-        android:layout_gravity="center_horizontal"
-        style="@style/ButtonText"
-        android:onClick="monitorWifi"/>
-    <Button
-        android:layout_width="200dp"
-        android:layout_height="wrap_content"
-        android:text="Clear Data"
-        android:layout_marginTop="16dp"
-        android:layout_gravity="center_horizontal"
-        style="@style/ButtonText"
-        android:onClick="clearData"/>
-</LinearLayout>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:paddingBottom="16dp"
+            android:paddingTop="16dp"
+            android:text="A live tracking system" />
+
+        <Button
+            style="@style/ButtonText"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="36dp"
+            android:background="@android:color/darker_gray"
+            android:enabled="false"
+            android:onClick="showWifiDetails"
+            android:text="Users" />
+
+        <Button
+            style="@style/ButtonText"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:onClick="monitorWifi"
+            android:text="Monitor Signal" />
+
+        <Button
+            style="@style/ButtonText"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:background="@android:color/darker_gray"
+            android:enabled="false"
+            android:onClick="clearData"
+            android:text="Settings" />
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

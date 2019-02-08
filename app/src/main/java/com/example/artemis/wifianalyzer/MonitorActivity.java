@@ -85,27 +85,6 @@ public class MonitorActivity extends AppCompatActivity {
 
         final ListView signalListView = (ListView) findViewById(R.id.list);
 
-        final String filename = "WiFi";
-
-        try {
-            FileInputStream fin = openFileInput(filename);
-            BufferedReader bb=new BufferedReader(new InputStreamReader(fin));
-            String temp=bb.readLine();
-
-            int i = R.drawable.history;
-
-            while(temp!=null){
-
-                String val[] = temp.split(" ");
-
-                signals.add(new Signal(i,val[0]+" "+val[1],val[2]));
-                signalListView.setAdapter(new SignalAdapter(MonitorActivity.this, signals));
-                temp=bb.readLine();
-            }
-        }
-        catch(Exception e){
-        }
-
         final long msec = 30*1000;
 
         T = new Timer();

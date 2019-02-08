@@ -44,18 +44,13 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Analyze your Wi-Fi properties and signal strength", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                goToFingerprinting();
             }
         });
 
         Switch mySwitch = (Switch) findViewById(R.id.switch1);
 
-        WifiManager wifi = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        if(wifi.isWifiEnabled())
-            mySwitch.setChecked(true);
-        else
-            mySwitch.setChecked(false);
+        /* @TODO set initial live monitor value */
 
         //attach a listener to check for changes in state
         mySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -63,42 +58,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
-                WifiManager wifi;
-
-                if(isChecked){
-                    wifi = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                    wifi.setWifiEnabled(true);
-                }else{
-                    wifi = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-                    wifi.setWifiEnabled(false);
-                }
+                //use live monitoring code here
 
             }
         });
-
-        findWifiStrength();
-        updateStrength();
     }
 
-    public void updateStrength() {
 
-        final long time = 7000;
-
-        T = new Timer();
-        T.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        findWifiStrength();
-                    }
-                });
-            }
-        }, time, time);
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -121,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
 
             builder.setTitle(R.string.action_settings);
             builder.setIcon(R.drawable.ic_info);
-            builder.setMessage(R.string.dialog_text);
+            builder.setMessage("Locus is a live tracking application.");
             builder.setCancelable(true);
             builder.setPositiveButton("Okay", null);
 
@@ -134,48 +100,6 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void findWifiStrength() {
-        TextView tv = (TextView)findViewById(R.id.wifiText);
-
-        WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-        int dbm = wifiInfo.getRssi();
-
-        tv.setText(dbm+"");
-    }
-
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-    public void showWifiDetails(View view) {
-
-        WifiManager wifiManager = (WifiManager)getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        WifiInfo wifiInfo = wifiManager.getConnectionInfo();
-
-        int level = WifiManager.calculateSignalLevel(wifiInfo.getRssi(), 5);
-        int ip = wifiInfo.getIpAddress();
-        String ipAddress = Formatter.formatIpAddress(ip);
-
-        // Create a fake list of properties.
-        ArrayList<Properties> properties = new ArrayList<>();
-        properties.add(new Properties("SSID",wifiInfo.getSSID()));
-        properties.add(new Properties("Bars", ""+level));
-        properties.add(new Properties("Frequency",wifiInfo.getFrequency()+" MHz"));
-        properties.add(new Properties("Link Speed",wifiInfo.getLinkSpeed()+" Mbps"));
-        properties.add(new Properties("IP Address",ipAddress));
-        properties.add(new Properties("MAC Address",wifiInfo.getMacAddress()));
-
-        // Create a new {@link ArrayAdapter} of properties
-        PropertyAdapter adapter = new PropertyAdapter(this,properties);
-
-        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-        builder.setIcon(R.drawable.icon_wifi);
-        builder.setTitle("Wi-Fi Properties");
-
-        builder.setNegativeButton("Cancel",null);
-        builder.setAdapter(adapter,null);
-        builder.show();
-
-    }
-
     public void monitorWifi(View view) {
 
         Context context = this;
@@ -183,9 +107,9 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
-    public void clearData(View vew) {
-        File file = new File(getFilesDir(), "WiFi");
-        file.delete();
-        Toast.makeText(getApplicationContext(),"File cleared",Toast.LENGTH_LONG).show();
+    private void goToFingerprinting() {
+        Context context = this;
+        Intent intent = new Intent(context,Fingerprinting.class);
+        startActivity(intent);
     }
 }
