@@ -1,15 +1,19 @@
 <resources>
-    <string name="app_name">Wifi Analyzer</string>
+    <string name="app_name">Locus</string>
     <string name="action_settings">About</string>
     <string name="dialog_text">
-        WiFi Analyzer
+        Locus
         \nVersion 1.0
-        \nRelease: 25-03-2017
         \nAll rights reserved.
         \n\nContact:
-        \nMenaka Ravi
-        \nmenaka.ravi23@gmail.com
     </string>
     <string name="title_activity_monitor">Monitor Wifi Signal</string>
     <string name="title_activity_fingerprinting">Fingerprinting</string>
+    <string name="select_a_spot">Select a spot</string>
+    <string name="live_tracking">Live Tracking</string>
+    <string name="off">OFF</string>
+    <string name="on">ON</string>
+    <string name="users">Users</string>
+    <string name="monitor_signal">Monitor Signal</string>
+    <string name="settings">Settings</string>
 </resources>
