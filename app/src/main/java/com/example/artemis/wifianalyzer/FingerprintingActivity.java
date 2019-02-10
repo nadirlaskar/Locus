@@ -24,6 +24,9 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 
+import com.example.artemis.wifianalyzer.api.ApiResponse;
+import com.example.artemis.wifianalyzer.api.SpotController;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -36,7 +39,7 @@ import java.util.TimerTask;
 
 public class FingerprintingActivity extends AppCompatActivity {
 
-    Snackbar status, upload;
+    Snackbar status, upload, info;
     Timer P;
     FloatingActionButton fab;
     HashMap<String, ArrayList<Fingerprint>> fingerprintMap, spotFingerprintMap;
@@ -45,6 +48,8 @@ public class FingerprintingActivity extends AppCompatActivity {
     boolean newDataAvailable = true;
     WifiManager wifiManager = null;
     ListView fingerprintList;
+
+    SpotController spotController;
 
     public class SignalComparator implements Comparator<ScanResult>
 
@@ -88,7 +93,7 @@ public class FingerprintingActivity extends AppCompatActivity {
                         upload.dismiss();
                     }
                 });
-
+        fab.setVisibility(View.GONE);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -108,7 +113,8 @@ public class FingerprintingActivity extends AppCompatActivity {
         if (ab != null)
             ab.setDisplayHomeAsUpEnabled(true);
 
-        addSpots();
+        getSpots();
+
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
@@ -117,26 +123,79 @@ public class FingerprintingActivity extends AppCompatActivity {
         }
     }
 
-    private void addSpots() {
-        final List<String> spinnerArray = new ArrayList<>();
-        spinnerArray.add("ODC-9-Corridor");
-        spinnerArray.add("ODC-9-Center");
-        spinnerArray.add("Gemini");
-        spinnerArray.add("6th Floor Washroom Men's");
-        spinnerArray.add("6th Floor Washroom Women's");
-        spinnerArray.add("6th Floor Lift Lobby");
+    private void getSpots() {
+
+        spotController = new SpotController(new ApiResponse<List<String>>() {
+            @Override
+            public void success(final List<String> response) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        info = Snackbar.make(fab, "Spots loaded.", Snackbar.LENGTH_LONG);
+                        info.show();
+                        addSpots(response);
+                    }
+                });
+            }
+
+            @Override
+            public void failure(String error) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        info = Snackbar.make(fab, "Spot fetch failed loading from cache..", Snackbar.LENGTH_LONG);
+                        info.show();
+                        addSpots(null);
+                    }
+                });
+            }
+
+            @Override
+            public void loading() {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        info = Snackbar.make(fab, "Loading spots..", Snackbar.LENGTH_INDEFINITE);
+                        info.show();
+                    }
+                });
+            }
+        });
+
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                spotController.start();
+            }
+        }).start();
+
+    }
+
+    private void addSpots(List<String> spots) {
+
+        if (spots == null) {
+            spots = new ArrayList<>();
+            spots.add("ODC-9-Corridor");
+            spots.add("ODC-9-Center");
+            spots.add("Gemini");
+            spots.add("6th Floor Washroom Men's");
+            spots.add("6th Floor Washroom Women's");
+            spots.add("6th Floor Lift Lobby");
+        }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, R.layout.spinner_spot_list, spinnerArray);
+                this, R.layout.spinner_spot_list, spots);
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         final Spinner sItems = (Spinner) findViewById(R.id.spinner);
 
         if (sItems != null) {
+            final List<String> finalSpots = spots;
             sItems.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                    selectedSpot = spinnerArray.get(i);
+                    selectedSpot = finalSpots.get(i);
                     fingerprintMap = new HashMap<>();
                 }
 
@@ -146,7 +205,9 @@ public class FingerprintingActivity extends AppCompatActivity {
                 }
             });
             sItems.setAdapter(adapter);
-            selectedSpot = spinnerArray.get(0);
+            selectedSpot = spots.get(0);
+
+            fab.setVisibility(View.VISIBLE);
         }
 
     }
@@ -244,9 +305,9 @@ public class FingerprintingActivity extends AppCompatActivity {
                 fingerprints.add(new Fingerprint(SSID, dbm + " dBm", img));
             }
         }
-        if (fingerprintList != null){
+        if (fingerprintList != null) {
             fingerprintList.setAdapter(new FingerprintAdapter(FingerprintingActivity.this, fingerprints));
-            spotFingerprintMap.put(selectedSpot,fingerprints);
+            spotFingerprintMap.put(selectedSpot, fingerprints);
         }
 
     }
