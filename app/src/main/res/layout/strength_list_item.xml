@@ -7,12 +7,16 @@
     android:minHeight="?android:attr/listPreferredItemHeight"
     android:padding="16dp">
 
-    <ImageView
-        android:id="@+id/bars"
+    <TextView
+        android:id="@+id/ssid"
         android:layout_width="0dp"
-        android:layout_height="36dp"
-        tools:src="@drawable/icon_wifi"
-        android:layout_weight="1"/>
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="2"
+        android:gravity="end"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        tools:text="SSID" />
 
     <TextView
         android:id="@+id/strength"
@@ -24,14 +28,12 @@
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
         tools:text="-30 dBm" />
 
-    <TextView
-        android:id="@+id/time"
+    <ImageView
+        android:id="@+id/bars"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="2"
-        tools:text="07:45:07"
-        android:textSize="16sp"
-        android:layout_gravity="center_vertical"
-        android:gravity="right"/>
+        android:layout_height="36dp"
+        android:layout_weight="1"
+        tools:src="@drawable/icon_wifi"
+        android:contentDescription="WifiBars" />
 
 </LinearLayout>

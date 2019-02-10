@@ -34,7 +34,7 @@
                 android:value="com.example.artemis.wifianalyzer.MainActivity" />
         </activity>
         <activity
-            android:name=".Fingerprinting"
+            android:name=".FingerprintingActivity"
             android:label="@string/title_activity_fingerprinting"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar"></activity>

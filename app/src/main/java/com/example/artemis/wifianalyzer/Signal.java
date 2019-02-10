@@ -10,7 +10,7 @@ public class Signal {
     private String dbm;
     private String time;
 
-    public Signal(int b, String d, String t) {
+    Signal(int b, String d, String t) {
         bars = b;
         dbm = d;
         time = t;
@@ -24,7 +24,7 @@ public class Signal {
         return dbm;
     }
 
-    public int getDbmInt(){ return  Integer.parseInt(dbm); }
+    public int getDbmInt(){ return  Integer.parseInt(dbm.split(" ")[0]); }
 
     public String getTime() {
         return time;
