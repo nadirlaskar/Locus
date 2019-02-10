@@ -29,5 +29,14 @@ dependencies {
     compile 'com.android.support:appcompat-v7:23.4.0'
     compile 'com.android.support.constraint:constraint-layout:1.0.2'
     compile 'com.android.support:design:23.4.0'
+
+    // retrofit
+    compile 'com.squareup.retrofit2:retrofit:2.1.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.1.0'
+
+    // Junit
     testCompile 'junit:junit:4.12'
+    testCompile("org.junit.jupiter:junit-jupiter-api:5.0.0")
+    // to run JUnit 3/4 tests:
+    testCompile("junit:junit:4.12")
 }
