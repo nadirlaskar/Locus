@@ -91,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     public void monitorWifi(View view) {
 
         Context context = this;
-        Intent intent = new Intent(context,MonitorActivity.class);
+        Intent intent = new Intent(context,ActivitySensor.class);
         startActivity(intent);
     }
 
