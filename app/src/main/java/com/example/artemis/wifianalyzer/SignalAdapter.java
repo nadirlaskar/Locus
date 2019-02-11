@@ -38,8 +38,8 @@ public class SignalAdapter extends ArrayAdapter {
         TextView strengthView = (TextView)listItemView.findViewById(R.id.strength);
         strengthView.setText(currentSignal.getDbm());
 
-        TextView timeView = (TextView)listItemView.findViewById(R.id.time);
-        timeView.setText(currentSignal.getTime());
+        TextView ssidView = (TextView)listItemView.findViewById(R.id.ssid);
+        ssidView.setText(currentSignal.getSSID());
 
         return listItemView;
     }

@@ -1,9 +1,7 @@
 package com.example.artemis.wifianalyzer.api;
 
-import java.io.IOException;
 import java.util.List;
 
-import com.example.artemis.wifianalyzer.Fingerprint;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -13,14 +11,14 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class SpotController implements Callback<List<String>> {
+public class SpotController implements Callback<ServerResponse<List<com.example.artemis.wifianalyzer.model.Spot>>> {
 
-    private static final String BASE_URL = "http://www.mocky.io/v2/";
-    private ApiResponse<List<String>> callback;
+    private static final String BASE_URL = "http://192.168.137.1:6789/v1/";
+    private ApiResponse<List<com.example.artemis.wifianalyzer.model.Spot>> callback;
 
 
 
-    public SpotController(ApiResponse<List<String>> callback){
+    public SpotController(ApiResponse<List<com.example.artemis.wifianalyzer.model.Spot>> callback){
         if(callback != null)
             this.callback = callback;
     }
@@ -37,15 +35,15 @@ public class SpotController implements Callback<List<String>> {
 
         Spot spotApi = retrofit.create(Spot.class);
 
-        Call<List<String>> call = spotApi.loadSpots();
+        Call<ServerResponse<List<com.example.artemis.wifianalyzer.model.Spot>>> call = spotApi.loadSpots();
         call.enqueue(this);
         callback.loading();
     }
 
     @Override
-    public void onResponse(Call<List<String>> call, Response<List<String>> response) {
+    public void onResponse(Call<ServerResponse<List<com.example.artemis.wifianalyzer.model.Spot>>> call, Response<ServerResponse<List<com.example.artemis.wifianalyzer.model.Spot>>> response) {
         if(response.isSuccessful()) {
-            List<String> Spots = response.body();
+            List<com.example.artemis.wifianalyzer.model.Spot> Spots = response.body().getData();
             callback.success(Spots);
         } else {
             callback.failure(response.message());
@@ -54,7 +52,7 @@ public class SpotController implements Callback<List<String>> {
     }
 
     @Override
-    public void onFailure(Call<List<String>> call, Throwable t) {
+    public void onFailure(Call<ServerResponse<List<com.example.artemis.wifianalyzer.model.Spot>>> call, Throwable t) {
         callback.failure(t.getMessage());
     }
 }

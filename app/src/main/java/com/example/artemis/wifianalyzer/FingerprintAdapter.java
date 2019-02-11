@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 public class FingerprintAdapter extends ArrayAdapter {
 
-    FingerprintAdapter(Activity context, ArrayList<Fingerprint> properties) {
+    FingerprintAdapter(Activity context, ArrayList<FingerprintListModel> properties) {
         super(context,0,properties);
     }
 
@@ -31,7 +31,7 @@ public class FingerprintAdapter extends ArrayAdapter {
                     R.layout.strength_list_item, parent, false);
         }
 
-        Fingerprint strengthItem = (Fingerprint) getItem(position);
+        FingerprintListModel strengthItem = (FingerprintListModel) getItem(position);
 
         TextView ssid = (TextView)listItemView.findViewById(R.id.ssid);
         assert strengthItem != null;
