@@ -1,10 +1,7 @@
 package com.example.artemis.wifianalyzer.api;
 
-import com.example.artemis.wifianalyzer.FingerprintListModel;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-
-import java.util.ArrayList;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -12,14 +9,14 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class FingerprintController implements Callback<Object> {
+public class TrackController implements Callback<Object> {
 
     private static final String BASE_URL = "http://192.168.137.1:6789/v1/";
     private ApiResponse<Object> callback;
 
 
 
-    public FingerprintController(ApiResponse<Object> callback){
+    public TrackController(ApiResponse<Object> callback){
         if(callback != null)
             this.callback = callback;
     }
@@ -34,9 +31,9 @@ public class FingerprintController implements Callback<Object> {
                 .addConverterFactory(GsonConverterFactory.create(gson))
                 .build();
 
-        Fingerprint fingerprintApi = retrofit.create(Fingerprint.class);
+        Track fingerprintApi = retrofit.create(Track.class);
 
-        Call<Object> call = fingerprintApi.postFingerprint(fingerprintForSpot);
+        Call<Object> call = fingerprintApi.postTrackFingerprint(fingerprintForSpot);
         call.enqueue(this);
         callback.loading();
     }

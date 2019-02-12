@@ -46,7 +46,7 @@ public class FingerprintingActivity extends AppCompatActivity {
     Snackbar status, upload, info;
     Timer P;
     FloatingActionButton fab;
-    HashMap<String, ArrayList<FingerprintListModel>> ssidFingerprintMap;
+    HashMap<String, ArrayList<FingerprintListModel>> bssidFingerprintMap;
     HashMap<String, Fingerprint> spotFingerprintMap;
     Spot selectedSpot;
     Timer T, T1;
@@ -90,7 +90,7 @@ public class FingerprintingActivity extends AppCompatActivity {
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         fab = (FloatingActionButton) findViewById(R.id.fab);
         fingerprintList = (ListView) findViewById(R.id.list);
-        ssidFingerprintMap = new HashMap<>();
+        bssidFingerprintMap = new HashMap<>();
         spotFingerprintMap = new HashMap<>();
         upload = Snackbar.make(fab, "Captured fingerprint.", Snackbar.LENGTH_INDEFINITE)
                 .setAction("Upload", new View.OnClickListener() {
@@ -133,21 +133,21 @@ public class FingerprintingActivity extends AppCompatActivity {
         fingerprintController = new FingerprintController(new ApiResponse<Object>() {
             @Override
             public void loading() {
-                info = Snackbar.make(fab,"Submitting fingerprint",Snackbar.LENGTH_INDEFINITE);
+                info = Snackbar.make(fab, "Submitting fingerprint", Snackbar.LENGTH_INDEFINITE);
                 info.show();
             }
 
             @Override
             public void success(Object response) {
                 spotFingerprintMap.remove(selectedSpot.getId());
-                ssidFingerprintMap = new HashMap<>();
-                info = Snackbar.make(fab,"FingerprintListModel submitted successfully",Snackbar.LENGTH_LONG);
+                bssidFingerprintMap = new HashMap<>();
+                info = Snackbar.make(fab, "FingerprintListModel submitted successfully", Snackbar.LENGTH_LONG);
                 info.show();
             }
 
             @Override
             public void failure(String error) {
-                info = Snackbar.make(fab,"Unable to submit fingerprint",Snackbar.LENGTH_LONG);
+                info = Snackbar.make(fab, "Unable to submit fingerprint", Snackbar.LENGTH_LONG);
                 info.show();
                 info.setCallback(new Snackbar.Callback() {
                     @Override
@@ -159,7 +159,7 @@ public class FingerprintingActivity extends AppCompatActivity {
             }
         });
 
-        fingerprintController.start(selectedSpot,spotFingerprintMap.get(selectedSpot.getId()));
+        fingerprintController.start(spotFingerprintMap.get(selectedSpot.getId()));
 
     }
 
@@ -216,13 +216,13 @@ public class FingerprintingActivity extends AppCompatActivity {
 
         if (spots == null) {
             spots = new ArrayList<>();
-            float[] pos = {0,0};
-            spots.add(new Spot("-1","ODC-9-Corridor"));
-            spots.add(new Spot("-1","ODC-9-Center"));
-            spots.add(new Spot("-1","Gemini"));
-            spots.add(new Spot("-1","6th Floor Washroom Men's"));
-            spots.add(new Spot("-1","6th Floor Washroom Women's"));
-            spots.add(new Spot("-1","6th Floor Lift Lobby"));
+            float[] pos = {0, 0};
+            spots.add(new Spot("-1", "ODC-9-Corridor"));
+            spots.add(new Spot("-1", "ODC-9-Center"));
+            spots.add(new Spot("-1", "Gemini"));
+            spots.add(new Spot("-1", "6th Floor Washroom Men's"));
+            spots.add(new Spot("-1", "6th Floor Washroom Women's"));
+            spots.add(new Spot("-1", "6th Floor Lift Lobby"));
         }
 
         ArrayAdapter<Spot> adapter = new ArrayAdapter<>(
@@ -237,7 +237,7 @@ public class FingerprintingActivity extends AppCompatActivity {
                 @Override
                 public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                     selectedSpot = finalSpots.get(i);
-                    ssidFingerprintMap = new HashMap<>();
+                    bssidFingerprintMap = new HashMap<>();
                 }
 
                 @Override
@@ -304,12 +304,11 @@ public class FingerprintingActivity extends AppCompatActivity {
         T1.cancel();
         T1.purge();
 
-        final ArrayList<FingerprintListModel> fingerprintListModels = new ArrayList<>();
-        final Fingerprint fingerprint = new Fingerprint(selectedSpot.getId(),new ArrayList<AccessPoint>(), Util.getMacAddr());
+        final Fingerprint fingerprint = new Fingerprint(selectedSpot.getId(), new ArrayList<AccessPoint>(), Util.getMacAddr());
         int img = 0, dbm, level;
         final List<FingerprintListModel> fingerPrintAggregate = new ArrayList<>();
 
-        for (Map.Entry<String, ArrayList<FingerprintListModel>> fp : ssidFingerprintMap.entrySet()) {
+        for (Map.Entry<String, ArrayList<FingerprintListModel>> fp : bssidFingerprintMap.entrySet()) {
             int aggregateLevel = 0;
             ArrayList<FingerprintListModel> fingerprintListModelArrayList = fp.getValue();
             for (FingerprintListModel f : fingerprintListModelArrayList) {
@@ -320,36 +319,32 @@ public class FingerprintingActivity extends AppCompatActivity {
 
         Collections.sort(fingerPrintAggregate, new FingerprintingActivity.FingerprintComparator());
 
-        fingerprintListModels.clear();
         for (FingerprintListModel fp : fingerPrintAggregate) {
             dbm = fp.getStrengthInt();
             String SSID = fp.getSSID();
-            if ((SSID.startsWith("S1_Employee"))) {
-                level = WifiManager.calculateSignalLevel(dbm, 5);
-                switch (level) {
-                    case 0:
-                        img = R.drawable.icon_wifi0;
-                        break;
-                    case 1:
-                        img = R.drawable.icon_wifi1;
-                        break;
-                    case 2:
-                        img = R.drawable.icon_wifi2;
-                        break;
-                    case 3:
-                        img = R.drawable.icon_wifi3;
-                        break;
-                    case 4:
-                        img = R.drawable.icon_wifi;
-                        break;
-                }
-
-                fingerprintListModels.add(new FingerprintListModel(SSID, dbm + " dBm", img));
-                fingerprint.addAccessPoint(new AccessPoint(SSID,fp.getStrengthInt()));
+            level = WifiManager.calculateSignalLevel(dbm, 5);
+            switch (level) {
+                case 0:
+                    img = R.drawable.icon_wifi0;
+                    break;
+                case 1:
+                    img = R.drawable.icon_wifi1;
+                    break;
+                case 2:
+                    img = R.drawable.icon_wifi2;
+                    break;
+                case 3:
+                    img = R.drawable.icon_wifi3;
+                    break;
+                case 4:
+                    img = R.drawable.icon_wifi;
+                    break;
             }
+            fingerprint.addAccessPoint(new AccessPoint(SSID, fp.getStrengthInt()));
+
         }
+
         if (fingerprintList != null) {
-            fingerprintList.setAdapter(new FingerprintAdapter(FingerprintingActivity.this, fingerprintListModels));
             spotFingerprintMap.put(selectedSpot.getId(), fingerprint);
         }
 
@@ -419,13 +414,13 @@ public class FingerprintingActivity extends AppCompatActivity {
                                 fingerprintListModels.add(new FingerprintListModel(SSID, dbm + " dBm", img));
 
                                 if (status != null && status.isShown()) {
-                                    ArrayList<FingerprintListModel> aFP = ssidFingerprintMap.get(SSID);
+                                    ArrayList<FingerprintListModel> aFP = bssidFingerprintMap.get(sr.BSSID);
                                     if (aFP == null) {
                                         aFP = new ArrayList<>();
-                                        aFP.add(new FingerprintListModel(SSID, dbm + " dBm", img));
-                                        ssidFingerprintMap.put(SSID, aFP);
+                                        aFP.add(new FingerprintListModel(sr.BSSID, dbm + " dBm", img));
+                                        bssidFingerprintMap.put(sr.BSSID, aFP);
                                     } else {
-                                        aFP.add(new FingerprintListModel(SSID, dbm + " dBm", img));
+                                        aFP.add(new FingerprintListModel(sr.BSSID, dbm + " dBm", img));
                                     }
                                 }
 
