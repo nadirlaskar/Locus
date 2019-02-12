@@ -1,6 +1,8 @@
 package com.example.artemis.wifianalyzer.services;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -11,47 +13,51 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.os.Handler;
 import android.os.IBinder;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.NotificationCompat;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.artemis.wifianalyzer.FingerprintAdapter;
-import com.example.artemis.wifianalyzer.FingerprintListModel;
-import com.example.artemis.wifianalyzer.FingerprintingActivity;
 import com.example.artemis.wifianalyzer.MainActivity;
 import com.example.artemis.wifianalyzer.R;
 import com.example.artemis.wifianalyzer.api.ApiResponse;
-import com.example.artemis.wifianalyzer.api.FingerprintController;
 import com.example.artemis.wifianalyzer.api.TrackController;
+import com.example.artemis.wifianalyzer.api.TrackMeController;
 import com.example.artemis.wifianalyzer.model.AccessPoint;
 import com.example.artemis.wifianalyzer.model.Fingerprint;
-import com.example.artemis.wifianalyzer.model.Spot;
 import com.example.artemis.wifianalyzer.util.Util;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.github.nisrulz.sensey.MovementDetector;
+import com.github.nisrulz.sensey.Sensey;
+
+
 public class LocusTracking extends Service {
     private TrackController trackController;
+    private TrackMeController trackMeController;
+    private MovementDetector.MovementListener movementListener;
+    int movement = 0;
+    private long lastScanTime = -1;
 
     public LocusTracking() {
     }
 
     private static final String LOG_TAG = "ForegroundService";
     public static boolean IS_SERVICE_RUNNING = false;
-    Timer T, T1;
+    Timer sendSpotPrintAtMax, readResultAndSend;
     boolean newDataAvailable = true;
     WifiManager wifiManager = null;
 
     BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent intent) {
+            lastScanTime = System.currentTimeMillis();
             newDataAvailable = true;
         }
     };
@@ -72,8 +78,9 @@ public class LocusTracking extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
             Log.i(LOG_TAG, "Received Start Foreground Intent ");
+            Sensey.getInstance().init(this);
             startFingerprinting();
-            showNotification();
+            showNotification("Unknown");
             Toast.makeText(this, "Locus is tracking your location", Toast.LENGTH_SHORT).show();
 
         } else if (intent.getAction().equals(
@@ -87,13 +94,16 @@ public class LocusTracking extends Service {
     }
 
     private void stopFingerprinting() {
-        T.cancel();
-        T.purge();
-        T1.cancel();
-        T1.purge();
+        sendSpotPrintAtMax.cancel();
+        sendSpotPrintAtMax.purge();
+        readResultAndSend.cancel();
+        readResultAndSend.purge();
+        Sensey.getInstance().stopMovementDetection(movementListener);
     }
 
-    private void showNotification() {
+    private NotificationManager notifManager;
+    private Notification notification;
+    private void showNotification(String Spot) {
         Intent notificationIntent = new Intent(this, MainActivity.class);
         notificationIntent.setAction(Constants.ACTION.MAIN_ACTION);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
@@ -104,14 +114,42 @@ public class LocusTracking extends Service {
         Bitmap icon = BitmapFactory.decodeResource(getResources(),
                 R.drawable.ic_info);
 
-        Notification notification = new NotificationCompat.Builder(this)
-                .setContentTitle("Locus tracking enabled")
-                .setTicker("You are sharing your location")
-                .setContentText("Active")
-                .setSmallIcon(R.drawable.icon_info)
-                .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
-                .setContentIntent(pendingIntent)
-                .setOngoing(true).build();
+        if (notifManager == null) {
+            notifManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        }
+
+        String id = Constants.ACTION.LOCUS_ACTION;
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, id);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel mChannel = notifManager.getNotificationChannel(id);
+            if (mChannel == null) {
+                mChannel = new NotificationChannel(id, "Locus", importance);
+                mChannel.enableVibration(true);
+                notifManager.createNotificationChannel(mChannel);
+            }
+
+            builder = builder.setContentTitle("Locus tracking enabled")
+                    .setTicker("You are sharing your location")
+                    .setContentText("Active near "+ Spot)
+                    .setSmallIcon(R.drawable.icon_info)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setOngoing(true);
+        } else {
+            builder = builder.setContentTitle("Locus tracking enabled")
+                    .setTicker("You are sharing your location")
+                    .setContentText("Active near "+ Spot)
+                    .setSmallIcon(R.drawable.icon_info)
+                    .setDefaults(Notification.DEFAULT_ALL)
+                    .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
+                    .setContentIntent(pendingIntent)
+                    .setPriority(Notification.PRIORITY_HIGH)
+                    .setOngoing(true);
+        }
+        notification = builder.build();
         startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE,
                 notification);
 
@@ -131,48 +169,95 @@ public class LocusTracking extends Service {
     }
 
     private void startFingerprinting() {
-        final long msec = 30 * 1000;
+        final long maxScanCap = 30 * 1000;
 
-        T = new Timer();
-        T1 = new Timer();
-        wifiManager.startScan();
+        sendSpotPrintAtMax = new Timer();
+        readResultAndSend = new Timer();
 
-        T.scheduleAtFixedRate(new TimerTask() {
+        // scan if motion detected
+        movementListener = new MovementDetector.MovementListener() {
             @Override
-            public void run() {
-                wifiManager.startScan(); //enable for force scan
-                newDataAvailable = false;
+            public void onMovement() {
+                movement++;
+                startScan();
             }
-        }, 0, msec);
 
-        final long readData = 1000;
-        T1.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void onStationary() {
+                startScan();
+                movement = 0;
+            }
+        };
+
+        // Start sensing with threshold 200 and 10s stationary settings
+        Sensey.getInstance().startMovementDetection(100,5000,movementListener);
+
+
+        // schedule upload on idle
+        sendSpotPrintAtMax.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
+                newDataAvailable = movement == 0; // if movement zero then send old data as new data
+            }
+        }, 0, maxScanCap);
 
-                if (!newDataAvailable) return;
-                newDataAvailable = false;
-
-                final Fingerprint fingerprint = new Fingerprint("",new ArrayList<AccessPoint>(), Util.getMacAddr());
-
-                int img = 0, dbm, level;
-                final List<ScanResult> scanResults = wifiManager.getScanResults();
-                for (ScanResult sr : scanResults) {
-                    String SSID = sr.SSID;
-                    if ((SSID.startsWith("S1_Employee"))) {
-                        fingerprint.addAccessPoint(new AccessPoint(sr.BSSID,sr.level));
-                    }
-                }
-
-                submitFingerprint(fingerprint);
-
+        // read and send scan information if available
+        final long readData = 1000;
+        readResultAndSend.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                scanAndSubmit();
             }
         }, 0, readData);
 
+        // Send initial scan
+        startScan();
+
+    }
+    private boolean scheduled = false;
+    private void startScan() {
+        long currentScanTime = System.currentTimeMillis();
+        long timeElapsed = (currentScanTime - lastScanTime);
+        if (lastScanTime == -1){
+            wifiManager.startScan();
+        }
+        else if (timeElapsed > (30 * 1000))
+            wifiManager.startScan();
+        else if(!scheduled) {
+            // Request after 5s
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    wifiManager.startScan();
+                    scheduled=false;
+                }
+            }, timeElapsed);
+
+            scheduled=true;
+        }
+    }
+
+    private void scanAndSubmit() {
+        if (!newDataAvailable) return;
+        newDataAvailable = false;
+
+        final Fingerprint fingerprint = new Fingerprint("", new ArrayList<AccessPoint>(), Util.getMacAddr());
+
+        int img = 0, dbm, level;
+        final List<ScanResult> scanResults = wifiManager.getScanResults();
+        for (ScanResult sr : scanResults) {
+            String SSID = sr.SSID;
+            if ((SSID.startsWith("S1_Employee"))&&sr.frequency<2500) {
+                fingerprint.addAccessPoint(new AccessPoint(sr.BSSID, sr.level));
+            }
+        }
+
+        submitFingerprint(fingerprint);
     }
 
 
-    private void submitFingerprint(Fingerprint fp) {
+    private boolean loadingTrackMe=false;
+    private void submitFingerprint(final Fingerprint fp) {
         trackController = new TrackController(new ApiResponse<Object>() {
             @Override
             public void loading() {
@@ -180,6 +265,34 @@ public class LocusTracking extends Service {
 
             @Override
             public void success(Object response) {
+                trackMeController = new TrackMeController(new ApiResponse<String>() {
+                    @Override
+                    public void loading() {
+                    }
+
+                    @Override
+                    public void success(String response) {
+                        showNotification(response);
+                        loadingTrackMe=false;
+                    }
+
+                    @Override
+                    public void failure(String error) {
+                        loadingTrackMe=false;
+                    }
+                });
+
+                if(!loadingTrackMe){
+                    // Request after 5s
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            trackMeController.start(fp.getDeviceMac());
+                        }
+                    }, 5000);
+                    loadingTrackMe=true;
+                }
+
             }
 
             @Override
@@ -191,5 +304,7 @@ public class LocusTracking extends Service {
         trackController.start(fp);
 
     }
+
+
 
 }
