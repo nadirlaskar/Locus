@@ -13,6 +13,9 @@ import android.view.MenuItem;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 
+import com.example.artemis.wifianalyzer.services.Constants;
+import com.example.artemis.wifianalyzer.services.LocusTracking;
+
 import java.util.Timer;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,21 +40,30 @@ public class MainActivity extends AppCompatActivity {
 
         Switch mySwitch = (Switch) findViewById(R.id.switch1);
 
-        /* @TODO set initial live monitor value */
-
         //attach a listener to check for changes in state
         assert mySwitch != null;
+        mySwitch.setChecked(LocusTracking.IS_SERVICE_RUNNING);
+
         mySwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 
             @Override
             public void onCheckedChanged(CompoundButton buttonView,
                                          boolean isChecked) {
-                //use live monitoring code here
+                Intent service = new Intent(MainActivity.this, LocusTracking.class);
+
+                if (isChecked&&!LocusTracking.IS_SERVICE_RUNNING) {
+                    service.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                    LocusTracking.IS_SERVICE_RUNNING = true;
+                    startService(service);
+                } else if(!isChecked&&LocusTracking.IS_SERVICE_RUNNING){
+                    service.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+                    LocusTracking.IS_SERVICE_RUNNING = false;
+                    startService(service);
+                }
 
             }
         });
     }
-
 
 
     @Override
@@ -91,13 +103,13 @@ public class MainActivity extends AppCompatActivity {
     public void monitorWifi(View view) {
 
         Context context = this;
-        Intent intent = new Intent(context,ActivitySensor.class);
+        Intent intent = new Intent(context, MonitorActivity.class);
         startActivity(intent);
     }
 
     private void goToFingerprinting() {
         Context context = this;
-        Intent intent = new Intent(context,FingerprintingActivity.class);
+        Intent intent = new Intent(context, FingerprintingActivity.class);
         startActivity(intent);
     }
 }
