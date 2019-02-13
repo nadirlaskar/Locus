@@ -391,7 +391,7 @@ public class FingerprintingActivity extends AppCompatActivity {
                         for (ScanResult sr : scanResults) {
                             dbm = sr.level;
                             String SSID = sr.SSID + " - " + sr.BSSID.substring(12);
-                            if ((SSID.startsWith("S1_Employee"))&&sr.frequency<2500) {
+                            if ((SSID.startsWith("S1_Employee"))) {
                                 level = WifiManager.calculateSignalLevel(dbm, 5);
                                 switch (level) {
                                     case 0:

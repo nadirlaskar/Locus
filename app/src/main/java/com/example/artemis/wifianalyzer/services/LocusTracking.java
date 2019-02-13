@@ -247,7 +247,7 @@ public class LocusTracking extends Service {
         final List<ScanResult> scanResults = wifiManager.getScanResults();
         for (ScanResult sr : scanResults) {
             String SSID = sr.SSID;
-            if ((SSID.startsWith("S1_Employee"))&&sr.frequency<2500) {
+            if ((SSID.startsWith("S1_Employee"))) {
                 fingerprint.addAccessPoint(new AccessPoint(sr.BSSID, sr.level));
             }
         }

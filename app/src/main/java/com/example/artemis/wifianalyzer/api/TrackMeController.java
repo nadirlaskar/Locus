@@ -11,7 +11,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class TrackMeController implements Callback<ServerResponse<String>> {
 
-    private static final String BASE_URL = "http://192.168.137.1:6789/v1/";
+    private static final String BASE_URL = "https://svn.slk-soft.com:80/locus/v1/";
     private ApiResponse<String> callback;
 
 
