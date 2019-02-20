@@ -2,6 +2,7 @@ package com.example.artemis.wifianalyzer.api;
 
 import java.util.List;
 
+import com.example.artemis.wifianalyzer.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -13,7 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class SpotController implements Callback<ServerResponse<List<com.example.artemis.wifianalyzer.model.Spot>>> {
 
-    private static final String BASE_URL = "https://svn.slk-soft.com:80/locus/v1/";
+    private static final String BASE_URL = "https://svn.slk-soft.com/v1/";
     private ApiResponse<List<com.example.artemis.wifianalyzer.model.Spot>> callback;
 
 
@@ -31,6 +32,7 @@ public class SpotController implements Callback<ServerResponse<List<com.example.
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(Util.getUnSafeClient())
                 .build();
 
         Spot spotApi = retrofit.create(Spot.class);

@@ -17,7 +17,6 @@ public class Fingerprint {
     }
 
     public Fingerprint(String spotId, ArrayList<AccessPoint> accessPoints, String deviceMac) {
-
         this.spotId = spotId;
         this.accessPoints = accessPoints;
         this.deviceMac = deviceMac;

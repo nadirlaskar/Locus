@@ -44,6 +44,7 @@ public class LocusTracking extends Service {
     private MovementDetector.MovementListener movementListener;
     int movement = 0;
     private long lastScanTime = -1;
+    private WifiManager.WifiLock wifiLock;
 
     public LocusTracking() {
     }
@@ -66,6 +67,7 @@ public class LocusTracking extends Service {
     public void onCreate() {
         super.onCreate();
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiLock = wifiManager.createWifiLock("LiveTracking");
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
         getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
@@ -79,6 +81,8 @@ public class LocusTracking extends Service {
         if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
             Log.i(LOG_TAG, "Received Start Foreground Intent ");
             Sensey.getInstance().init(this);
+            if(!wifiLock.isHeld())
+                wifiLock.acquire();
             startFingerprinting();
             showNotification("Unknown");
             Toast.makeText(this, "Locus is tracking your location", Toast.LENGTH_SHORT).show();
@@ -87,6 +91,8 @@ public class LocusTracking extends Service {
                 Constants.ACTION.STOPFOREGROUND_ACTION)) {
             Log.i(LOG_TAG, "Received Stop Foreground Intent");
             stopFingerprinting();
+            if(wifiLock.isHeld())
+                    wifiLock.release();
             stopForeground(true);
             stopSelf();
         }
@@ -169,7 +175,7 @@ public class LocusTracking extends Service {
     }
 
     private void startFingerprinting() {
-        final long maxScanCap = 30 * 1000;
+        final long maxScanCap = 10 * 1000;
 
         sendSpotPrintAtMax = new Timer();
         readResultAndSend = new Timer();
@@ -247,8 +253,8 @@ public class LocusTracking extends Service {
         final List<ScanResult> scanResults = wifiManager.getScanResults();
         for (ScanResult sr : scanResults) {
             String SSID = sr.SSID;
-            if ((SSID.startsWith("S1_Employee"))) {
-                fingerprint.addAccessPoint(new AccessPoint(sr.BSSID, sr.level));
+            if ((true)) { //filter ssid if required
+                fingerprint.addAccessPoint(new AccessPoint(sr.SSID,sr.BSSID,sr.level));
             }
         }
 
@@ -257,6 +263,7 @@ public class LocusTracking extends Service {
 
 
     private boolean loadingTrackMe=false;
+    private String lastLocation = "";
     private void submitFingerprint(final Fingerprint fp) {
         trackController = new TrackController(new ApiResponse<Object>() {
             @Override
@@ -272,7 +279,10 @@ public class LocusTracking extends Service {
 
                     @Override
                     public void success(String response) {
-                        showNotification(response);
+                        if(!lastLocation.equals(response)) {
+                            lastLocation = response;
+                            showNotification(response);
+                        }
                         loadingTrackMe=false;
                     }
 

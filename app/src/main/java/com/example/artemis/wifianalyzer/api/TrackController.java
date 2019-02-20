@@ -1,5 +1,6 @@
 package com.example.artemis.wifianalyzer.api;
 
+import com.example.artemis.wifianalyzer.util.Util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -11,7 +12,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class TrackController implements Callback<Object> {
 
-    private static final String BASE_URL = "https://svn.slk-soft.com:80/locus/v1/";
+    private static final String BASE_URL = "https://svn.slk-soft.com/v1/";
     private ApiResponse<Object> callback;
 
 
@@ -29,6 +30,7 @@ public class TrackController implements Callback<Object> {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create(gson))
+                .client(Util.getUnSafeClient())
                 .build();
 
         Track fingerprintApi = retrofit.create(Track.class);
